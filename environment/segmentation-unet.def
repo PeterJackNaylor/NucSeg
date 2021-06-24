@@ -1,0 +1,10 @@
+Bootstrap: docker
+From: tensorflow/tensorflow:latest-gpu
+
+
+%files
+    requirements.txt .
+    
+%post
+    pip install -r requirements.txt
+    pip install -U --pre segmentation-models
