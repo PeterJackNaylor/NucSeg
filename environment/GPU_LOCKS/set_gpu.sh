@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-AVAILABLE_GPU=(0)
+AVAILABLE_GPU="0"
 FOUND=0
 sleep $[ ( $RANDOM % 10 ) + 1 ]s
 FILEPATH=$1/environment/GPU_LOCKS/LOCKS
