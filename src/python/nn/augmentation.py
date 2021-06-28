@@ -1,8 +1,9 @@
 import tensorflow as tf
 import numpy as np
-from tensorflow.python.ops.gen_batch_ops import batch
+
 import segmentation_models as sm
 import albumentations as A
+
 from functools import partial
 
 AUTO = tf.data.AUTOTUNE
@@ -20,7 +21,8 @@ def img_transformer(p=P, size=224, key="train", mean=None, std=None):
                     brightness_limit=0.2, contrast_limit=0.2, p=p
                 ),
                 A.HueSaturationValue(
-                    hue_shift_limit=1, sat_shift_limit=20, val_shift_limit=20, p=p
+                    hue_shift_limit=1, sat_shift_limit=20,
+                    val_shift_limit=20, p=p
                 ),
                 A.HorizontalFlip(p=p),
                 A.VerticalFlip(p=p),
@@ -54,18 +56,18 @@ def img_transformer(p=P, size=224, key="train", mean=None, std=None):
 def processing_data_functions(p=P, size=224, key="train", mean=None, std=None):
     transform = img_transformer(p, size=size, key=key, mean=mean, std=std)
 
-    def aug_fn(image, label, batch_size, image_size=size):
-        img_aug = np.zeros((batch_size, image_size, image_size, 3), dtype=np.float32)
-        lbl_aug = np.zeros((batch_size, image_size, image_size), dtype=np.float32)
-        for i in range(batch_size):
+    def aug_fn(image, label, bs, image_size=size):
+        img_aug = np.zeros((bs, image_size, image_size, 3), dtype=np.float32)
+        lbl_aug = np.zeros((bs, image_size, image_size), dtype=np.float32)
+        for i in range(bs):
             aug_data = transform(image=image[i], mask=label[i])
             img_aug[i] = aug_data["image"]
             lbl_aug[i] = aug_data["mask"]
         return img_aug, lbl_aug
 
-    def process_data(image, label, batch_size, image_size=size):
+    def process_data(image, label, bs, image_size=size):
         aug_img, label = tf.numpy_function(
-            func=aug_fn, inp=[image, label, batch_size], Tout=[tf.float32, tf.float32]
+            func=aug_fn, inp=[image, label, bs], Tout=[tf.float32, tf.float32]
         )
         return aug_img, label
 
@@ -73,7 +75,8 @@ def processing_data_functions(p=P, size=224, key="train", mean=None, std=None):
 
 
 def setup_datahandler(
-    x_train, y_train, x_val, y_val, batch_size, backbone, image_size, p=P, auto=AUTO
+    x_train, y_train, x_val, y_val, batch_size,
+    backbone, image_size, p=P, auto=AUTO
 ):
     preprocess_input = sm.get_preprocessing(backbone)
     mean = x_train.mean(axis=(0, 1, 2))

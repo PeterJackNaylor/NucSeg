@@ -40,7 +40,7 @@ class cpm(BaseData):
         content = f.readlines()
         size_x, size_y = content.pop(0)[:-1].split(" ")
         content = [int(c[:-1]) for c in content]
-        if 'CPM18' in filename:
+        if "CPM18" in filename:
             tmp = size_x
             size_x = size_y
             size_y = tmp
@@ -69,8 +69,8 @@ class cpm(BaseData):
                 b = (13, -13, 26, -26)
             elif gt_shape == (888, 801):
                 b = (69, -69, 25, -26)
-            raw = raw[b[0] : b[1], b[2] : b[3]]
-            gt = gt[b[0] : b[1], b[2] : b[3]]
+            raw = raw[b[0]:b[1], b[2]:b[3]]
+            gt = gt[b[0]:b[1], b[2]:b[3]]
         gt = meas.label(gt)
         return raw[:, :, :3], gt
 

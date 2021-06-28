@@ -20,8 +20,8 @@ def split(image, label, size):
     for i in range(0, f_step[0], s_steps[0]):
         for j in range(0, f_step[1], s_steps[1]):
             box = (i, j, i + s_steps[0], j + s_steps[1])
-            yield image[box[0] : box[2], box[1] : box[3]], label[
-                box[0] : box[2], box[1] : box[3]
+            yield image[box[0]:box[2], box[1]:box[3]], label[
+                box[0]: box[2], box[1]:box[3]
             ]
 
 

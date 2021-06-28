@@ -83,8 +83,8 @@ process training {
         each encoder from ENCODER 
         each loss from LOSS
     output:
-        set val("PARAM: backbone=${backbone}; model=${model} ; lr={lr}; encoder=${encoder}; loss=${loss}"), \
-            file('model.h5') into trained_models
+        set val("PARAM: type=${type}; backbone=${backbone}; model=${model} ; lr={lr}; encoder=${encoder}; loss=${loss}"), \
+            file('model.h5'), file('history.csv') into trained_models
     when:
         (type == 'distance' && loss == 'mse') || (type == 'binary' && loss != 'mse')
     script:

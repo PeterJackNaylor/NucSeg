@@ -6,6 +6,7 @@ from scipy.ndimage import distance_transform_edt
 
 from multiprocessing import Pool
 
+
 def distance_transform_array(bin_image):
     res = np.zeros_like(bin_image, dtype=np.float64)
     for j in range(1, int(bin_image.max()) + 1):
@@ -72,17 +73,18 @@ def main():
     n = len(o)
     train, val, test = create_train_val_test(0.6, 0.2, 0.2, n, strat_array)
 
-    if sys.argv[1] == 'binary':
+    if sys.argv[1] == "binary":
         y[y > 0] = 1
-        y = y.astype('uint8')
-    elif sys.argv[1] == 'distance':
+        y = y.astype("uint8")
+    elif sys.argv[1] == "distance":
         y = distance_transform_tensor(y)
     else:
-        raise Exception('Unknown method')
+        raise Exception("Unknown method")
 
     np.savez(f"Xy_train.npz", x=x[train], y=y[train], organs=o[train])
     np.savez(f"Xy_validation.npz", x=x[val], y=y[val], organs=o[val])
     np.savez(f"Xy_test.npz", x=x[test], y=y[test], organs=o[test])
+
 
 if __name__ == "__main__":
     main()

@@ -29,9 +29,11 @@ class tnbc(BaseData):
                 raw_path = file_pattern.format("Slide", id_, id_, j)
                 gt__path = file_pattern.format("GT", id_, id_, j)
                 yield raw_path, gt__path, organ
+
     def post_process(self, raw, gt):
         gt = meas.label(gt)
         return raw[6:-6, 6:-6, :3], gt[6:-6, 6:-6]
+
 
 def main():
     opt = options()
