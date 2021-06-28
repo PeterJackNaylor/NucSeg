@@ -2,7 +2,7 @@
 
 AVAILABLE_GPU=(0)
 FOUND=0
-# sleep $[ ( $RANDOM % 10 ) + 1 ]s
+sleep $[ ( $RANDOM % 10 ) + 1 ]s
 FILEPATH=$1/environment/GPU_LOCKS/LOCKS
 for N in $AVAILABLE_GPU
 do

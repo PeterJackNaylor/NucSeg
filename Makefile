@@ -1,7 +1,7 @@
 
 
 DATA_FOLDER=/data/dataset/nuc_segmentation/
-GPUS=1
+
 create_image:
 	sudo bash environment/create-img.sh
 
