@@ -11,7 +11,7 @@ benchmark: src/prepare_train_validation_test.nf
 				--monusac_path $(DATA_FOLDER)/MoNuSAC_images_and_annotations \
 				--consep_path $(DATA_FOLDER)/consep/CoNSeP \
 				--cpm_path $(DATA_FOLDER)/DataCPM \
-				--pan_crops $(DATA_FOLDER)/pan_crops \
+				--pancrops_path $(DATA_FOLDER)/pan_crops \
 				--benchmark 1 \
 				-resume
 
@@ -21,7 +21,7 @@ Unet_vgg: src/prepare_train_validation_test.nf
 				--monusac_path $(DATA_FOLDER)/MoNuSAC_images_and_annotations \
 				--consep_path $(DATA_FOLDER)/consep/CoNSeP \
 				--cpm_path $(DATA_FOLDER)/DataCPM \
-				--pan_crops $(DATA_FOLDER)/pan_crops \
+				--pancrops_path $(DATA_FOLDER)/pan_crops \
 				--benchmark 0 \
 				-resume
 
