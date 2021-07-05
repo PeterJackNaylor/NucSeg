@@ -9,6 +9,31 @@ params.pancrops_path = "/data/dataset/nuc_segmentation/pan_crops"
 
 params.benchmark = 1
 
+if (params.benchmark == 1){
+    EPOCHS = 100
+    BACKBONES = ['Unet', 'FPN', 'Linknet', 'PSPNet']
+    MODELS = ['vgg16', 'resnet50', 'densenet121', 'inceptionv3', 'efficientnetb4']
+    ENCODER = ['imagenet', 'None']
+    LOSS = ['CE', 'focal', 'mse']
+    LABELS = ["binary", "distance"]
+    LR = [1e-1, 1e-2, 1e-3, 1e-4]
+    WD = [1e-1, 5e-3, 5e-5]
+    ALPHA = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+    BETA= [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6]
+} else {
+    EPOCHS = 40
+    BACKBONES = ['Unet']
+    MODELS = ['vgg16']
+    ENCODER = ['imagenet']
+    LOSS = ['CE', 'mse']
+    LABELS = ["binary", "distance"]
+    LR = [1e-2, 1e-3]
+    WD = [5e-3]
+    ALPHA = [1, 4]
+    BETA= [0.2, 0.5]
+}
+
+
 SIZE = 250 
 DATASETS = Channel.from(["tnbc", file("src/python/datasets/tnbc.py"), file(params.tnbc_path)],
                         ["monuseg", file("src/python/datasets/monuseg.py"), file(params.monuseg_path)],
@@ -35,7 +60,7 @@ process preparing_data {
 }
 
 split_data_into_tvt = file('src/python/datasets/train_valid_test_split.py')
-LABELS = ["binary", "distance"]
+
 process train_validation_test {
     input:
         file _ from XY .collect()
@@ -49,27 +74,11 @@ process train_validation_test {
     """
 }
 
-
 pytraining = file("src/python/nn/training.py")
-LR = [1e-1, 1e-2, 1e-3, 1e-4]
-WD = [1e-1, 5e-3, 5e-5]
-
-if (params.benchmark == 1){
-    BACKBONES = ['Unet', 'FPN', 'Linknet', 'PSPNet']
-    MODELS = ['vgg16', 'resnet50', 'densenet121', 'inceptionv3', 'efficientnetb4']
-    ENCODER = ['imagenet', 'None']
-    LOSS = ['CE', 'focal', 'mse']
-} else {
-    BACKBONES = ['Unet']
-    MODELS = ['vgg16']
-    ENCODER = ['imagenet']
-    LOSS = ['CE']
-}
-
-
 
 process training {
     maxForks 1
+    // to enable GPU
     containerOptions '--nv'
 
     beforeScript "source ${CWD}/environment/GPU_LOCKS/set_gpu.sh ${CWD}"
@@ -80,11 +89,13 @@ process training {
         each backbone from BACKBONES
         each model from MODELS
         each lr from LR
+        each wd from WD
         each encoder from ENCODER 
         each loss from LOSS
     output:
-        set val("PARAM: type=${type}; backbone=${backbone}; model=${model} ; lr={lr}; encoder=${encoder}; loss=${loss}"), \
-            file('model.h5'), file('history.csv') into trained_models
+        set val("PARAM: type=${type}; backbone=${backbone}; model=${model}; lr=${lr}; wd=${wd}; encoder=${encoder}; loss=${loss}"), \
+            val(type), file('model_weights.h5'), file('history.csv'), file('meta.pkl'), file(validation)  into TRAINED_MODELS
+            
     when:
         (type == 'distance' && loss == 'mse') || (type == 'binary' && loss != 'mse')
     script:
@@ -96,8 +107,58 @@ process training {
                         --model $model \
                         --encoder $encoder \
                         --batch_size 32 \
-                        --epochs 100 \
+                        --epochs $EPOCHS \
                         --learning_rate $lr \
+                        --weight_decay $wd \
                         --loss $loss
     """
+}
+
+pyvalidation = file("src/python/nn/validation.py")
+
+process validation_with_ws {
+
+    containerOptions '--nv'
+
+    input:
+        set file(param), type, file(weights), file(history), \
+            file(meta), file(validation) from TRAINED_MODELS
+        each alpha from ALPHA 
+        each beta from BETA
+    output:
+        file('score.csv') into VALIDATION_SCORE
+    when:
+        (type == 'binary' && beta == 0.5) || (type == 'distance')
+    script:
+    """
+    python $pyvalidation    --weights ${weights} \
+                            --meta ${meta} \
+                            --path ${validation} \
+                            --alpha ${alpha} \
+                            --beta ${beta} \
+                            --param ${param}
+
+    """
+    
+}
+
+VALIDATION_SCORE.collectFile(skip: 1, keepHeader: true)
+                .set { ALL_VALIDATION }
+
+
+pytest = file('src/python/nn/testing.py')
+process test {
+
+    publishDir "./output", mode: 'copy'
+
+    input:
+        file f from  ALL_VALIDATION
+        set type, file(data) from TEST_SET
+    output:
+        set file('score.csv'), file('model_weights.h5'), file('meta.pkl'), file('final_score.csv'), file('samples')
+    script:
+    """
+    python $pytest --path $data --scores $f
+    """
+    
 }

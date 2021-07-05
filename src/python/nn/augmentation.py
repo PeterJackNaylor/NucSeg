@@ -1,5 +1,6 @@
 import tensorflow as tf
 import numpy as np
+import pickle
 
 import segmentation_models as sm
 import albumentations as A
@@ -52,6 +53,10 @@ def img_transformer(p=P, size=224, key="train", mean=None, std=None):
         )
     return transform
 
+def save_dic(file_name, dict):
+    with open(file_name, 'wb') as handle:
+        pickle.dump(dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
 
 def processing_data_functions(p=P, size=224, key="train", mean=None, std=None):
     transform = img_transformer(p, size=size, key=key, mean=mean, std=std)
@@ -81,6 +86,8 @@ def setup_datahandler(
     preprocess_input = sm.get_preprocessing(backbone)
     mean = x_train.mean(axis=(0, 1, 2))
     std = x_train.std(axis=(0, 1, 2))
+    save_dic("meta.pkl", {"mean": mean, "std": std})
+
     x_train = preprocess_input(x_train)
     x_val = preprocess_input(x_val)
     train_ds_rand = (
@@ -92,7 +99,7 @@ def setup_datahandler(
                 processing_data_functions(
                     key="train", size=image_size, p=p, mean=mean, std=std
                 ),
-                batch_size=batch_size,
+                bs=batch_size,
             ),
             num_parallel_calls=auto,
         )
@@ -105,9 +112,9 @@ def setup_datahandler(
         .map(
             partial(
                 processing_data_functions(
-                    key="train", size=image_size, p=p, mean=mean, std=std
+                    key="validation", size=image_size, p=p, mean=mean, std=std
                 ),
-                batch_size=batch_size,
+                bs=batch_size,
             ),
             num_parallel_calls=auto,
         )

@@ -8,7 +8,7 @@ import tensorflow as tf
 import segmentation_models as sm
 
 from augmentation import setup_datahandler
-from dist_metrics import dist_acc_score, dist_f1_score
+from metric.dist_metrics import AccuracyDistance, F1_ScoreDistance
 
 
 def options():
@@ -27,17 +27,15 @@ def options():
     args.encoder = args.encoder if args.encoder == "imagenet" else None
     if args.loss == "CE":
         loss = "binary_crossentropy"
-        classes = 1
         activation = "sigmoid"
         metrics = [
             sm.metrics.IOUScore(threshold=0.5),
             sm.metrics.FScore(threshold=0.5),
             "binary_accuracy",
-            tf.keras.metrics.AUC(),
+            tf.keras.metrics.AUC()
         ]
     elif args.loss == "focal":
         loss = sm.losses.CategoricalFocalLoss()
-        classes = 1
         activation = "sigmoid"
         metrics = [
             sm.metrics.IOUScore(threshold=0.5),
@@ -47,13 +45,12 @@ def options():
         ]
     elif args.loss == "mse":
         loss = "mse"
-        classes = 1
         activation = "relu"
-        metrics = ["mse", dist_acc_score, dist_f1_score]
+        metrics = ["mse", AccuracyDistance(), F1_ScoreDistance()]
     else:
         raise Error("unknown loss, not implemented")
     args.k_loss = loss
-    args.classes = classes
+    args.classes = 1
     args.activation = activation
     args.metrics = metrics
 
@@ -104,7 +101,6 @@ def main():
         image_size,
     )
     # define model
-    # import pdb; pdb.set_trace()
 
     model = opt.model_f(
         opt.model,
@@ -140,6 +136,10 @@ def main():
         tf.keras.callbacks.ReduceLROnPlateau(
             monitor="val_loss", factor=0.2, patience=epochs / 10, min_lr=1e-6
         ),
+        tf.keras.callbacks.ModelCheckpoint(
+            './model_weights.h5', save_weights_only=True,
+            save_best_only=True, mode='min'
+        ),
     ]
 
     # fit model
@@ -154,7 +154,6 @@ def main():
         use_multiprocessing=True,
         verbose=1,
     )
-    model.save("model.h5")
 
     hist_df = pd.DataFrame(history.history)
     with open("history.csv", mode="w") as f:

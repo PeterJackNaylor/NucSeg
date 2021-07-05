@@ -67,12 +67,13 @@ def create_train_val_test(ptrain, pval, ptest, indice_max, array_to_stratefy):
 
 
 def main():
-    x, y, o, d = load_data()
+    x, labeled_y, o, d = load_data()
     # we stratefy with respect to the dataset and the organ type
     strat_array = np.char.add(o, d)
     n = len(o)
     train, val, test = create_train_val_test(0.6, 0.2, 0.2, n, strat_array)
 
+    y = labeled_y.copy()
     if sys.argv[1] == "binary":
         y[y > 0] = 1
         y = y.astype("uint8")
@@ -81,9 +82,27 @@ def main():
     else:
         raise Exception("Unknown method")
 
-    np.savez(f"Xy_train.npz", x=x[train], y=y[train], organs=o[train])
-    np.savez(f"Xy_validation.npz", x=x[val], y=y[val], organs=o[val])
-    np.savez(f"Xy_test.npz", x=x[test], y=y[test], organs=o[test])
+    np.savez(
+        f"Xy_train.npz",
+        x=x[train],
+        y=y[train],
+        organs=o[train],
+        labeled_y=labeled_y[train],
+    )
+    np.savez(
+        f"Xy_validation.npz",
+        x=x[val],
+        y=y[val],
+        organs=o[val],
+        labeled_y=labeled_y[val],
+    )
+    np.savez(
+        f"Xy_test.npz",
+        x=x[test],
+        y=y[test],
+        organs=o[test],
+        labeled_y=labeled_y[test]
+    )
 
 
 if __name__ == "__main__":

@@ -6,5 +6,12 @@ From: tensorflow/tensorflow:latest-gpu
     requirements.txt .
     
 %post
+    apt-get update && apt-get install git -y
+    pip install ez_setup
     pip install -r requirements.txt
+
+    ## install dynamic watershed
+    git clone https://github.com/PeterJackNaylor/dynamic_watershed.git
+    cd dynamic_watershed && python setup.py install
+
     pip install -U --pre segmentation-models

@@ -1,4 +1,5 @@
 pandas
 albumentations
 scikit-learn
+scikit-image
 imagecodecs
