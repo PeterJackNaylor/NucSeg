@@ -3,3 +3,4 @@ albumentations
 scikit-learn
 scikit-image
 imagecodecs
+pillow==8.2.0
