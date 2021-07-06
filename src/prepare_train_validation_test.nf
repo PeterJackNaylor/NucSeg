@@ -153,6 +153,7 @@ process test {
 
     publishDir "./output", mode: 'copy'
 
+    containerOptions '--nv'
     beforeScript "source ${CWD}/environment/GPU_LOCKS/set_gpu.sh ${CWD}"
     afterScript  "source ${CWD}/environment/GPU_LOCKS/free_gpu.sh ${CWD}"
 
