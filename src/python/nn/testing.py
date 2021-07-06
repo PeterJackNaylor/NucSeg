@@ -75,14 +75,19 @@ def options():
 
     return args
 
+
 def plot_and_save(i, rgb, pred_i, gt_i, opt, pred):
     rgb_i = rgb[i, 13:-13, 13:-13]
     name = "samples/id_{:03d}_{}.png"
-    
+
     imsave(name.format(i, "rgb"), rgb_i)
     if pred_i.max() != 0:
         mask_pred, pred_color = coloring_bin(pred_i)
-        rgb_mask_pred = apply_mask_with_highlighted_borders(rgb_i, pred_i, pred_color)
+        rgb_mask_pred = apply_mask_with_highlighted_borders(
+                                                rgb_i,
+                                                pred_i,
+                                                pred_color
+                                                )
         imsave(name.format(i, "pred_class"), mask_pred)
         imsave(name.format(i, "pred_class_rgb"), rgb_mask_pred)
     else:
@@ -90,19 +95,24 @@ def plot_and_save(i, rgb, pred_i, gt_i, opt, pred):
         imsave(name.format(i, "pred_class_rgb"), rgb_i)
     if gt_i.max() != 0:
         mask_gt, gt_color = coloring_bin(gt_i)
-        rgb_mask_gt = apply_mask_with_highlighted_borders(rgb_i, gt_i, gt_color)
-        imsave(name.format(i, "gt_class"), (mask_gt*255).astype('uint8'))
+        rgb_mask_gt = apply_mask_with_highlighted_borders(
+                                                rgb_i,
+                                                gt_i,
+                                                gt_color
+                                                )
+        imsave(name.format(i, "gt_class"), (mask_gt * 255).astype("uint8"))
         imsave(name.format(i, "gt_class_rgb"), rgb_mask_gt)
     else:
         imsave(name.format(i, "gt_class"), np.zeros_like(rgb_i))
         imsave(name.format(i, "gt_class_rgb"), rgb_i)
-    if opt.type == 'binary':
+    if opt.type == "binary":
         p_name = name.format(i, "proba")
-        raw_out = (pred[i].copy() * 255).astype('uint8')
+        raw_out = (pred[i].copy() * 255).astype("uint8")
     else:
         p_name = name.format(i, "distance")
-        raw_out = (pred[i].copy()).astype('uint8')
+        raw_out = (pred[i].copy()).astype("uint8")
     imsave(p_name, raw_out)
+
 
 def main():
     opt = options()
@@ -116,12 +126,20 @@ def main():
     ajis = []
     n = pred.shape[0]
     os.mkdir("samples")
-    import pdb; pdb.set_trace()
+
     for i in range(n):
-        if opt.type == 'binary':
-            pred_i = post_process(pred[i,:,:,0], opt.alpha / 255, thresh=opt.beta)
+        if opt.type == "binary":
+            pred_i = post_process(
+                pred[i, :, :, 0],
+                opt.alpha / 255,
+                thresh=opt.beta
+                )
         else:
-            pred_i = post_process(pred[i,:,:,0], opt.alpha, thresh=opt.beta)
+            pred_i = post_process(
+                pred[i, :, :, 0],
+                opt.alpha,
+                thresh=opt.beta
+                )
         gt_i = y_labeled[i]
         plot_and_save(i, rgb, pred_i, gt_i, opt, pred)
         ajis.append(aji_fast(gt_i, pred_i))

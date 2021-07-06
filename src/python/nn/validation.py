@@ -116,9 +116,17 @@ def main():
     n = pred.shape[0]
     for i in range(n):
         if opt.type == "binary":
-            pred_i = post_process(pred[i,:,:,0], opt.alpha / 255, thresh=opt.beta)
+            pred_i = post_process(
+                pred[i, :, :, 0],
+                opt.alpha / 255,
+                thresh=opt.beta
+                )
         else:
-            pred_i = post_process(pred[i,:,:,0], opt.alpha, thresh=opt.beta)
+            pred_i = post_process(
+                pred[i, :, :, 0],
+                opt.alpha,
+                thresh=opt.beta
+                )
         gt_i = y_labeled[i]
         ajis.append(aji_fast(gt_i, pred_i))
     aji = np.mean(ajis)
