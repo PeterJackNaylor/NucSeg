@@ -77,7 +77,6 @@ process train_validation_test {
 pytraining = file("src/python/nn/training.py")
 
 process training {
-    maxForks 1
     // to enable GPU
     containerOptions '--nv'
 
@@ -120,6 +119,9 @@ process validation_with_ws {
 
     containerOptions '--nv'
 
+    beforeScript "source ${CWD}/environment/GPU_LOCKS/set_gpu.sh ${CWD}"
+    afterScript  "source ${CWD}/environment/GPU_LOCKS/free_gpu.sh ${CWD}"
+
     input:
         set file(param), type, file(weights), file(history), \
             file(meta), file(validation) from TRAINED_MODELS
@@ -150,6 +152,9 @@ pytest = file('src/python/nn/testing.py')
 process test {
 
     publishDir "./output", mode: 'copy'
+
+    beforeScript "source ${CWD}/environment/GPU_LOCKS/set_gpu.sh ${CWD}"
+    afterScript  "source ${CWD}/environment/GPU_LOCKS/free_gpu.sh ${CWD}"
 
     input:
         file f from  ALL_VALIDATION
