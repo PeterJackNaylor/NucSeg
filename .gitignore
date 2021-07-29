@@ -186,3 +186,4 @@ work/
 .nextflow.*
 *.sif
 output/
+tmp/

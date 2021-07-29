@@ -11,7 +11,7 @@ from google.protobuf.descriptor import Error
 import segmentation_models as sm
 from training import get_Xy
 from dynamic_watershed import post_process
-from metric.object_metrics import aji_fast
+from metric.from_hover import get_fast_aji_plus
 from sklearn.metrics import accuracy_score, f1_score
 
 
@@ -128,7 +128,7 @@ def main():
                 thresh=opt.beta
                 )
         gt_i = y_labeled[i]
-        ajis.append(aji_fast(gt_i, pred_i))
+        ajis.append(get_fast_aji_plus(label(gt_i), pred_i))
     aji = np.mean(ajis)
     # accuracy, f1,
 

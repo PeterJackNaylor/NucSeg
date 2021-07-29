@@ -6,13 +6,14 @@ from validation import load_meta, load_model, setup_data
 
 from google.protobuf.descriptor import Error
 from skimage.io import imsave
+from skimage.measure import label 
 from useful_plot import coloring_bin, apply_mask_with_highlighted_borders
 
 import segmentation_models as sm
 from dynamic_watershed import post_process
-from metric.object_metrics import aji_fast
+from metric.from_hover import get_fast_aji_plus
 from sklearn.metrics import accuracy_score, f1_score
-
+from tqdm import trange
 
 def get_max(path):
     table = pd.read_csv(path, delimiter=",")
@@ -125,9 +126,10 @@ def main():
     # aji computation
     ajis = []
     n = pred.shape[0]
-    os.mkdir("samples")
+    if not os.path.isdir('samples'):
+        os.mkdir("samples")
 
-    for i in range(n):
+    for i in trange(n):
         if opt.type == "binary":
             pred_i = post_process(
                 pred[i, :, :, 0],
@@ -142,10 +144,12 @@ def main():
                 )
         gt_i = y_labeled[i]
         plot_and_save(i, rgb, pred_i, gt_i, opt, pred)
-        ajis.append(aji_fast(gt_i, pred_i))
+        if gt_i.max() == 0 and pred_i.max() == 0:
+            ajis.append(1.)
+        else:
+            ajis.append(get_fast_aji_plus(label(gt_i), pred_i))
     aji = np.mean(ajis)
     # accuracy, f1
-
     y_true = (y_labeled > 0).flatten()
     y_pred = (pred > opt.beta).flatten()
 
