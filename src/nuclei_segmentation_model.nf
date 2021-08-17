@@ -11,8 +11,8 @@ params.benchmark = 1
 
 if (params.benchmark == 1){
     EPOCHS = 100
-    BACKBONES = ['Unet', 'FPN', 'Linknet', 'PSPNet']
-    MODELS = ['vgg16', 'resnet50', 'densenet121', 'inceptionv3', 'efficientnetb4']
+    MODELS = ['Unet', 'FPN', 'Linknet', 'PSPNet']
+    BACKBONES = ['vgg16', 'resnet50', 'densenet121', 'inceptionv3', 'efficientnetb4']
     ENCODER = ['imagenet', 'None']
     LOSS = ['CE', 'focal', 'mse']
     LABELS = ["binary", "distance"]
@@ -21,12 +21,12 @@ if (params.benchmark == 1){
     ALPHA = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
     BETA= [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6]
 } else {
-    EPOCHS = 40
-    BACKBONES = ['Unet']
-    MODELS = ['vgg16']
+    EPOCHS = 20
+    MODELS = ['Unet']
+    BACKBONES = ['vgg16']
     ENCODER = ['imagenet']
-    LOSS = ['CE', 'mse']
-    LABELS = ["binary", "distance"]
+    LOSS = ['CE']
+    LABELS = ["binary"]
     LR = [1e-2, 1e-3]
     WD = [5e-3]
     ALPHA = [1, 4]
@@ -138,7 +138,8 @@ process validation_with_ws {
                             --path ${validation} \
                             --alpha ${alpha} \
                             --beta ${beta} \
-                            --param ${param}
+                            --param ${param} \
+                            --aji
 
     """
     
@@ -164,7 +165,7 @@ process test {
         set file('score.csv'), file('model_weights.h5'), file('meta.pkl'), file('final_score.csv'), file('samples')
     script:
     """
-    python $pytest --path $data --scores $f
+    python $pytest --path $data --scores $f --aji
     """
     
 }

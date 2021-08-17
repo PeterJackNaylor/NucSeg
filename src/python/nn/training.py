@@ -34,6 +34,7 @@ def options():
             "binary_accuracy",
             tf.keras.metrics.AUC()
         ]
+        early_stopping_var = "val_f1-score"
     elif args.loss == "focal":
         loss = sm.losses.CategoricalFocalLoss()
         activation = "sigmoid"
@@ -43,27 +44,29 @@ def options():
             "binary_accuracy",
             tf.keras.metrics.AUC(),
         ]
+        early_stopping_var = "val_f1-score"
     elif args.loss == "mse":
         loss = "mse"
         activation = "relu"
         metrics = ["mse", AccuracyDistance(), F1_ScoreDistance()]
+        early_stopping_var = "val_f1_score_d"
     else:
         raise Error("unknown loss, not implemented")
     args.k_loss = loss
     args.classes = 1
     args.activation = activation
     args.metrics = metrics
-
-    if args.backbone == "Unet":
+    args.early_stopping_var = early_stopping_var
+    if args.model == "Unet":
         model_f = sm.Unet
-    elif args.backbone == "FPN":
+    elif args.model == "FPN":
         model_f = sm.FPN
-    elif args.backbone == "Linknet":
+    elif args.model == "Linknet":
         model_f = sm.Linknet
-    elif args.backbone == "PSPNet":
+    elif args.model == "PSPNet":
         model_f = sm.PSPNet
     else:
-        raise Error(f"unknown backbone: {args.backbone}, not implemented")
+        raise Error(f"unknown model: {args.model}, not implemented")
     args.model_f = model_f
     return args
 
@@ -97,13 +100,13 @@ def main():
         x_val,
         y_val,
         opt.batch_size,
-        opt.model,
+        opt.backbone,
         image_size,
     )
     # define model
 
     model = opt.model_f(
-        opt.model,
+        opt.backbone,
         classes=opt.classes,
         activation=opt.activation,
         encoder_weights=opt.encoder,

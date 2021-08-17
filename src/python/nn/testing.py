@@ -2,25 +2,30 @@ import os
 import argparse
 import numpy as np
 import pandas as pd
-from validation import load_meta, load_model, setup_data
 
 from google.protobuf.descriptor import Error
 from skimage.io import imsave
 from skimage.measure import label 
-from useful_plot import coloring_bin, apply_mask_with_highlighted_borders
-
-import segmentation_models as sm
-from dynamic_watershed import post_process
-from metric.from_hover import get_fast_aji_plus
 from sklearn.metrics import accuracy_score, f1_score
 from tqdm import trange
 
-def get_max(path):
+from validation import load_meta, load_model, setup_data
+from useful_plot import coloring_bin, apply_mask_with_highlighted_borders
+import segmentation_models as sm
+from dynamic_watershed import post_process
+from metric.from_hover import get_fast_aji_plus
+
+
+def get_max(path, aji=True):
     table = pd.read_csv(path, delimiter=",")
-    max_aji = table["aji"].max()
-    table = table.loc[
-        table["aji"] == max_aji,
-    ]
+    table = table.fillna(0)
+
+    if aji:
+        var = "aji"
+        max_var = table[var].max()
+        table = table.loc[
+            table[var] == max_var,
+        ]
     max_f1 = table["val_f1"].max()
     table = table.loc[
         table["val_f1"] == max_f1,
@@ -34,12 +39,15 @@ def get_max(path):
 
 
 def options():
+    # options
     parser = argparse.ArgumentParser(description="setting up training")
     parser.add_argument("--path", type=str)
     parser.add_argument("--scores", type=str, default="meta.pkl")
+    parser.add_argument('--aji', dest='aji', action='store_true')
+    parser.add_argument('--no_aji', dest='aji', action='store_false')
     args = parser.parse_args()
 
-    table = get_max(args.scores)
+    table = get_max(args.scores, args.aji)
     args.table = table
     args.alpha = table["alpha"]
     args.beta = table["beta"]
@@ -49,8 +57,11 @@ def options():
     args.weights = table["weights"]
     args.meta = table["meta"]
 
-    os.symlink(args.weights, os.path.basename(args.weights))
-    os.symlink(args.meta, os.path.basename(args.meta))
+    # bring file to working directory
+    if not os.path.isfile(os.path.basename(args.weights)):
+        os.symlink(args.weights, os.path.basename(args.weights))
+    if not os.path.isfile(os.path.basename(args.meta)):
+        os.symlink(args.meta, os.path.basename(args.meta))
 
     if args.type == "binary":
         activation = "sigmoid"
@@ -62,25 +73,26 @@ def options():
     args.activation = activation
     args.classes = 1
 
-    if args.backbone == "Unet":
+    if args.model == "Unet":
         model_f = sm.Unet
-    elif args.backbone == "FPN":
+    elif args.model == "FPN":
         model_f = sm.FPN
-    elif args.backbone == "Linknet":
+    elif args.model == "Linknet":
         model_f = sm.Linknet
-    elif args.backbone == "PSPNet":
+    elif args.model == "PSPNet":
         model_f = sm.PSPNet
     else:
-        raise Error(f"unknown backbone: {args.backbone}, not implemented")
+        raise Error(f"unknown model: {args.model}, not implemented")
     args.model_f = model_f
 
     return args
 
 
 def plot_and_save(i, rgb, pred_i, gt_i, opt, pred):
-    rgb_i = rgb[i, 13:-13, 13:-13]
+    rgb_i = rgb[i]
+    if not (rgb_i.shape[:2] == gt_i.shape):
+        rgb_i = rgb_i[13:-13, 13:-13]
     name = "samples/id_{:03d}_{}.png"
-
     imsave(name.format(i, "rgb"), rgb_i)
     if pred_i.max() != 0:
         mask_pred, pred_color = coloring_bin(pred_i)
@@ -118,37 +130,43 @@ def plot_and_save(i, rgb, pred_i, gt_i, opt, pred):
 def main():
     opt = options()
     mean, std = load_meta(opt.meta)
-    ds_val, y_labeled = setup_data(opt.path, mean, std)
+    ds_val, y_labeled = setup_data(opt.path, mean, std, opt.backbone)
     rgb = np.load(opt.path)["x"]
     model = load_model(opt)
     pred = model.predict(ds_val)
 
     # aji computation
-    ajis = []
     n = pred.shape[0]
     if not os.path.isdir('samples'):
         os.mkdir("samples")
 
+    if opt.aji:
+        ajis = []
     for i in trange(n):
-        if opt.type == "binary":
-            pred_i = post_process(
-                pred[i, :, :, 0],
-                opt.alpha / 255,
-                thresh=opt.beta
-                )
+        if opt.aji:
+            if opt.type == "binary":
+                pred_i = post_process(
+                    pred[i, :, :, 0],
+                    opt.alpha / 255,
+                    thresh=opt.beta
+                    )
+            else:
+                pred_i = post_process(
+                    pred[i, :, :, 0],
+                    opt.alpha,
+                    thresh=opt.beta
+                    )
         else:
-            pred_i = post_process(
-                pred[i, :, :, 0],
-                opt.alpha,
-                thresh=opt.beta
-                )
+            pred_i = (pred[i, :, :, 0] > opt.beta).astype('uint8')
         gt_i = y_labeled[i]
         plot_and_save(i, rgb, pred_i, gt_i, opt, pred)
-        if gt_i.max() == 0 and pred_i.max() == 0:
-            ajis.append(1.)
-        else:
-            ajis.append(get_fast_aji_plus(label(gt_i), pred_i))
-    aji = np.mean(ajis)
+        if opt.aji:
+            if gt_i.max() == 0 and pred_i.max() == 0:
+                ajis.append(1.)
+            else:
+                ajis.append(get_fast_aji_plus(label(gt_i), pred_i))
+    if opt.aji:
+        aji = np.mean(ajis)
     # accuracy, f1
     y_true = (y_labeled > 0).flatten()
     y_pred = (pred > opt.beta).flatten()
@@ -159,7 +177,8 @@ def main():
     df = opt.table
     df["test_acc"] = acc
     df["test_f1"] = f1
-    df["test_aji"] = aji
+    if opt.aji:
+        df["test_aji"] = aji
     df.to_csv("final_score.csv")
 
 

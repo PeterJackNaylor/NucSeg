@@ -1,27 +1,37 @@
 
-
-DATA_FOLDER=/data/dataset/nuc_segmentation/
+DATA_NUC=/data/dataset/nuc_segmentation
+DATA_TISSUE=/data/dataset/tissue_segmentation/data_tissue
 
 create_image:
 	sudo bash environment/create-img.sh
 
+tissue_local: src/tissue_segmentation_model.nf
+	nextflow $< --data_path $(DATA_TISSUE) \
+				--benchmark 0 \
+				-resume
+
+tissue: src/tissue_segmentation_model.nf
+	nextflow $< --data_path $(DATA_TISSUE) \
+				--benchmark 1 \
+				-resume
+
 benchmark: src/nuclei_segmentation_model.nf
-	nextflow $< --tnbc_path $(DATA_FOLDER)/TNBC_NucleiSegmentation \
-				--monuseg_path $(DATA_FOLDER)/MoNucleiSegmentation \
-				--monusac_path $(DATA_FOLDER)/MoNuSAC_images_and_annotations \
-				--consep_path $(DATA_FOLDER)/consep/CoNSeP \
-				--cpm_path $(DATA_FOLDER)/DataCPM \
-				--pancrops_path $(DATA_FOLDER)/pan_crops \
+	nextflow $< --tnbc_path $(DATA_NUC)/TNBC_NucleiSegmentation \
+				--monuseg_path $(DATA_NUC)/MoNucleiSegmentation \
+				--monusac_path $(DATA_NUC)/MoNuSAC_images_and_annotations \
+				--consep_path $(DATA_NUC)/consep/CoNSeP \
+				--cpm_path $(DATA_NUC)/DataCPM \
+				--pancrops_path $(DATA_NUC)/pan_crops \
 				--benchmark 1 \
 				-resume
 
 Unet_vgg: src/nuclei_segmentation_model.nf
-	nextflow $< --tnbc_path $(DATA_FOLDER)/TNBC_NucleiSegmentation \
-				--monuseg_path $(DATA_FOLDER)/MoNucleiSegmentation \
-				--monusac_path $(DATA_FOLDER)/MoNuSAC_images_and_annotations \
-				--consep_path $(DATA_FOLDER)/consep/CoNSeP \
-				--cpm_path $(DATA_FOLDER)/DataCPM \
-				--pancrops_path $(DATA_FOLDER)/pan_crops \
+	nextflow $< --tnbc_path $(DATA_NUC)/TNBC_NucleiSegmentation \
+				--monuseg_path $(DATA_NUC)/MoNucleiSegmentation \
+				--monusac_path $(DATA_NUC)/MoNuSAC_images_and_annotations \
+				--consep_path $(DATA_NUC)/consep/CoNSeP \
+				--cpm_path $(DATA_NUC)/DataCPM \
+				--pancrops_path $(DATA_NUC)/pan_crops \
 				--benchmark 0 \
 				-resume
 

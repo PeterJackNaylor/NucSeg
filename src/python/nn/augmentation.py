@@ -84,6 +84,7 @@ def setup_datahandler(
     x_train, y_train, x_val, y_val, batch_size,
     backbone, image_size, p=P, auto=AUTO
 ):
+    ## TODO model becomes backbone
     preprocess_input = sm.get_preprocessing(backbone)
     mean = x_train.mean(axis=(0, 1, 2))
     std = x_train.std(axis=(0, 1, 2))
