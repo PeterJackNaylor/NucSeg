@@ -11,10 +11,10 @@ params.benchmark = 1
 
 if (params.benchmark == 1){
     EPOCHS = 100
-    MODELS = ['Unet', 'FPN', 'Linknet', 'PSPNet']
-    BACKBONES = ['vgg16', 'resnet50', 'densenet121', 'inceptionv3', 'efficientnetb4']
+    MODELS = ['Unet', 'FPN', 'Linknet']
+    BACKBONES = ['resnet50', 'inceptionv3', 'efficientnetb4']
     ENCODER = ['imagenet', 'None']
-    LOSS = ['CE', 'focal', 'mse']
+    LOSS = ['CE', 'mse']
     LABELS = ["binary", "distance"]
     LR = [1e-1, 1e-2, 1e-3, 1e-4]
     WD = [1e-1, 5e-3, 5e-5]
