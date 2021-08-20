@@ -51,12 +51,12 @@ def options():
         model_f = sm.Unet
     elif args.model == "FPN":
         model_f = sm.FPN
-    elif args.backbone == "Linknet":
+    elif args.model == "Linknet":
         model_f = sm.Linknet
-    elif args.backbone == "PSPNet":
+    elif args.model == "PSPNet":
         model_f = sm.PSPNet
     else:
-        raise Error(f"unknown backbone: {args.backbone}, not implemented")
+        raise Error(f"unknown backbone: {args.model}, not implemented")
     args.model_f = model_f
 
     return args

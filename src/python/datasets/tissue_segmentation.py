@@ -4,7 +4,6 @@ from numpy import logical_and
 import skimage.measure as meas
 from skimage.io import imread
 from skimage.transform import resize
-from skimage.filters import threshold_otsu
 from class_data import options, BaseData
 
 

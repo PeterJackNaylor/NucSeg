@@ -4,3 +4,5 @@ scikit-learn
 scikit-image
 imagecodecs
 pillow==8.2.0
+openslide-python
+useful_wsi

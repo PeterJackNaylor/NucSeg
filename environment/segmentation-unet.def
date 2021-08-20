@@ -8,6 +8,9 @@ From: tensorflow/tensorflow:latest-gpu
 %post
     apt-get update && apt-get install git -y
     pip install ez_setup
+    ## openslide
+    apt-get install openslide-tools -y
+
     pip install -r requirements.txt
 
     ## install dynamic watershed

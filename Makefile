@@ -35,6 +35,13 @@ Unet_vgg: src/nuclei_segmentation_model.nf
 				--benchmark 0 \
 				-resume
 
+ENV=export PYTHONPATH=`pwd`/src/python/nn:`pwd`/src/templates/segmentation:$${PYTHONPATH}
+
+transform_wsi_into_nuclei_table: src/from_wsi_to_nuclei_table.nf
+	$(ENV); nextflow $< -resume
+
+test_transform_wsi_into_nuclei_table: src/from_wsi_to_nuclei_table.nf
+	$(ENV); nextflow $< --data "/data/dataset/camelyon2016/*/*/*.tif" -resume
 
 clean:
 	rm environment/segmentation-unet.sif

@@ -152,7 +152,7 @@ VALIDATION_SCORE.collectFile(skip: 1, keepHeader: true)
 pytest = file('src/python/nn/testing.py')
 process test {
 
-    publishDir "./output", mode: 'copy'
+    publishDir "./nuclei_segmentation_model", mode: 'copy'
 
     containerOptions '--nv'
     beforeScript "source ${CWD}/environment/GPU_LOCKS/set_gpu.sh ${CWD}"
