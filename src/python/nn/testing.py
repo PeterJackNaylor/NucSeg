@@ -7,7 +7,6 @@ from google.protobuf.descriptor import Error
 from skimage.io import imsave
 from skimage.measure import label 
 from sklearn.metrics import accuracy_score, f1_score
-from tqdm import trange
 
 from validation import load_meta, load_model, setup_data
 from useful_plot import coloring_bin, apply_mask_with_highlighted_borders
@@ -142,7 +141,7 @@ def main():
 
     if opt.aji:
         ajis = []
-    for i in trange(n):
+    for i in range(n):
         if opt.aji:
             if opt.type == "binary":
                 pred_i = post_process(

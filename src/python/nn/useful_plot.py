@@ -66,8 +66,11 @@ def add_contours(image, label, color=(0, 1, 0)):
 
 def coloring_bin(labeled):
     n = labeled.max()
-    rdm_col_orig = random_colors(n)
-    rdm_col = np.array([np.array((0, 0, 0), dtype="int")] + rdm_col_orig)
+    if n != 0:
+        rdm_col_orig = random_colors(n)
+        rdm_col = np.array([np.array((0, 0, 0), dtype="int")] + rdm_col_orig)
+    else:
+        rdm_col = np.array([np.array((0, 0, 0), dtype="int")])
     colored = rdm_col[labeled]
 
     return colored, rdm_col
