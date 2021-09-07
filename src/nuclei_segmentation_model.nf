@@ -123,16 +123,16 @@ process validation_with_ws {
     afterScript  "source ${CWD}/environment/GPU_LOCKS/free_gpu.sh ${CWD}"
 
     input:
-        set file(param), type, file(weights), file(history), \
+        set file(param), type, file(weights), history, \
             file(meta), file(validation) from TRAINED_MODELS
         each alpha from ALPHA 
         each beta from BETA
     output:
         file('score.csv') into VALIDATION_SCORE
     when:
-        ( f1_score > 0.6 )&& (type == 'binary' && beta == 0.5) || (type == 'distance')
+        ( f1_score > 0.6 ) && ((type == 'binary' && beta == 0.5) || (type == 'distance'))
     script:
-    f1_score = Channel.fromPath(history).splitCsv(header: ["c1","c2","c3","c4","c5","c6","c7","c8","val_score","c9","c10","c11"], skip:1).map { row -> Float.valueOf("${row.val_score}") } .min () .val
+    f1_score = Channel.fromPath(history).splitCsv(header: ["c1","c2","c3","c4","c5","c6","c7","c8","val_score","c9","c10","c11"], skip:1).map { row -> Float.valueOf("${row.val_score}") } .max () .val
     """
     python $pyvalidation    --weights ${weights} \
                             --meta ${meta} \
