@@ -149,14 +149,10 @@ process validation_with_ws {
 VALIDATION_SCORE.collectFile(skip: 1, keepHeader: true)
                 .set { ALL_VALIDATION }
 
-process filter_down_table {
-
-}
-
 pytest = file('src/python/nn/testing.py')
 process test {
 
-    publishDir "./nuclei_segmentation_model", mode: 'copy'
+    publishDir "./outputs/nuclei_segmentation_model", mode: 'copy'
 
     containerOptions '--nv'
     beforeScript "source ${CWD}/environment/GPU_LOCKS/set_gpu.sh ${CWD}"
