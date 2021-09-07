@@ -135,7 +135,6 @@ process validation_with_ws {
     when:
         ( f1_score > 0.6 ) && ((type == 'binary' && beta == 0.5) || (type == 'distance'))
     script:
-    println(f1_score)
     """
     python $pyvalidation    --weights ${weights} \
                             --meta ${meta} \
