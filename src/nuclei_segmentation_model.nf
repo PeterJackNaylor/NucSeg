@@ -115,7 +115,7 @@ process training {
 
 pyvalidation = file("src/python/nn/validation.py")
 
-TRAINED_MODELS .map{ it0, it1, it2, history, it4, it5 -> [it0, it1, it2, history, it4, it5, history.splitCsv(header: ["c1","c2","c3","c4","c5","c6","c7","c8","val_score","c9","c10","c11"], skip:1).map { row -> Float.valueOf("${row.val_score}") }.println() ]}
+TRAINED_MODELS .map{ it0, it1, it2, history, it4, it5 -> [it0, it1, it2, history, it4, it5, file(history).splitCsv(header: ["c1","c2","c3","c4","c5","c6","c7","c8","val_score","c9","c10","c11"], skip:1).map { row -> Float.valueOf("${row.val_score}") }.println() ]}
                .set{TRAINED_MODELS}
 
 process validation_with_ws {
