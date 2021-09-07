@@ -23,6 +23,7 @@ def options():
     parser.add_argument("--weights", type=str, default="model_weights.h5")
     parser.add_argument("--alpha", type=float, default=5)
     parser.add_argument("--beta", type=float, default=0.5)
+    parser.add_argument("--history", type=str)
     parser.add_argument("--param", type=str, required=False)
     parser.add_argument('--aji', dest='aji', action='store_true')
     parser.add_argument('--no_aji', dest='aji', action='store_false')
@@ -148,7 +149,7 @@ def main():
     acc = accuracy_score(y_true, y_pred)
     f1 = f1_score(y_true, y_pred)
 
-    table_training = pd.read_csv("history.csv", index_col=0)
+    table_training = pd.read_csv(opt.history, index_col=0)
     if opt.type == "binary":
         name_acc_train = "binary_accuracy"
         name_f1_train = "f1-score"

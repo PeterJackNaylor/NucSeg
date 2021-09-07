@@ -141,6 +141,7 @@ process validation_with_ws {
                             --path ${validation} \
                             --alpha ${alpha} \
                             --beta ${beta} \
+                            --history ${history}
                             --param ${param} \
                             --aji
 
