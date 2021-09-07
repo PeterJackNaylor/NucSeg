@@ -126,7 +126,7 @@ process validation_with_ws {
     afterScript  "source ${CWD}/environment/GPU_LOCKS/free_gpu.sh ${CWD}"
 
     input:
-        set file(param), type, file(weights), history, \
+        set file(param), type, file(weights), file(history), \
             file(meta), file(validation), val(f1_score) from TRAINED_MODELS
         each alpha from ALPHA 
         each beta from BETA
