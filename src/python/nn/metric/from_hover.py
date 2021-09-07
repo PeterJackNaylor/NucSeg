@@ -15,6 +15,8 @@ def get_fast_aji(true, pred):
     not [2, 3, 6, 10]. Please call `remap_label` before hand and `by_size` flag has no 
     effect on the result.
     """
+    if true.sum() == 0 and pred.sum() == 0:
+        return 1.
     true = np.copy(true)  # ? do we need this
     pred = np.copy(pred)
     true_id_list = list(np.unique(true))
@@ -83,7 +85,10 @@ def get_fast_aji(true, pred):
     for pred_id in unpaired_pred:
         overall_union += pred_masks[pred_id].sum()
 
-    aji_score = overall_inter / overall_union
+    if overall_union == 0:
+        aji_score = 0.
+    else:
+        aji_score = overall_inter / overall_union
     return aji_score
 
 
@@ -98,6 +103,8 @@ def get_fast_aji_plus(true, pred):
     not [2, 3, 6, 10]. Please call `remap_label` before hand and `by_size` flag has no 
     effect on the result.
     """
+    if true.sum() == 0 and pred.sum() == 0:
+        return 1.
     true = np.copy(true)  # ? do we need this
     pred = np.copy(pred)
     true_id_list = list(np.unique(true))
@@ -166,7 +173,10 @@ def get_fast_aji_plus(true, pred):
     for pred_id in unpaired_pred:
         overall_union += pred_masks[pred_id].sum()
     #
-    aji_score = overall_inter / overall_union
+    if overall_union == 0:
+        aji_score = 0.
+    else:
+        aji_score = overall_inter / overall_union
     return aji_score
 
 

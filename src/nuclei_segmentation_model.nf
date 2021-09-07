@@ -130,8 +130,9 @@ process validation_with_ws {
     output:
         file('score.csv') into VALIDATION_SCORE
     when:
-        (type == 'binary' && beta == 0.5) || (type == 'distance')
+        ( f1_score > 0.6 )&& (type == 'binary' && beta == 0.5) || (type == 'distance')
     script:
+    f1_score = Channel.fromPath(history).splitCsv(header: ["c1","c2","c3","c4","c5","c6","c7","c8","val_score","c9","c10","c11"], skip:1).map { row -> Float.valueOf("${row.val_score}") } .min () .val
     """
     python $pyvalidation    --weights ${weights} \
                             --meta ${meta} \
@@ -148,6 +149,9 @@ process validation_with_ws {
 VALIDATION_SCORE.collectFile(skip: 1, keepHeader: true)
                 .set { ALL_VALIDATION }
 
+process filter_down_table {
+
+}
 
 pytest = file('src/python/nn/testing.py')
 process test {
