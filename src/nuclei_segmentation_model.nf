@@ -132,7 +132,8 @@ process validation_with_ws {
     when:
         ( f1_score > 0.6 ) && ((type == 'binary' && beta == 0.5) || (type == 'distance'))
     script:
-    f1_score = Channel.fromPath(history).splitCsv(header: ["c1","c2","c3","c4","c5","c6","c7","c8","val_score","c9","c10","c11"], skip:1).map { row -> Float.valueOf("${row.val_score}") } .max () .view{p -> p} .val
+    history.view{p -> p} 
+    f1_score = Channel.fromPath(history).view{p -> p} .splitCsv(header: ["c1","c2","c3","c4","c5","c6","c7","c8","val_score","c9","c10","c11"], skip:1).map { row -> Float.valueOf("${row.val_score}") } .max () .val
     """
     python $pyvalidation    --weights ${weights} \
                             --meta ${meta} \
