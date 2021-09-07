@@ -115,7 +115,8 @@ process training {
 
 pyvalidation = file("src/python/nn/validation.py")
 
-TRAINED_MODELS .map{ it0, it1, it2, history, it4, it5 -> [it0, it1, it2, history, it4, it5, Channel.fromPath(history).splitCsv(header: ["c1","c2","c3","c4","c5","c6","c7","c8","val_score","c9","c10","c11"], skip:1).map { row -> Float.valueOf("${row.val_score}") }.println() ]}
+TRAINED_MODELS .map{ it0, it1, it2, history, it4, it5 -> [it0, it1, it2, history, it4, it5, Channel.fromPath(history).splitCsv(header: ["c1","c2","c3","c4","c5","c6","c7","c8","val_score","c9","c10","c11"], skip:1).map { row -> Float.valueOf("${row.val_score}") } .max () .val]}
+               .view{p -> p}
                .set{TRAINED_MODELS}
 
 process validation_with_ws {
@@ -127,7 +128,7 @@ process validation_with_ws {
 
     input:
         set file(param), type, file(weights), history, \
-            file(meta), file(validation) from TRAINED_MODELS
+            file(meta), file(validation), f1_score from TRAINED_MODELS
         each alpha from ALPHA 
         each beta from BETA
     output:
@@ -135,7 +136,7 @@ process validation_with_ws {
     when:
         ( f1_score > 0.6 ) && ((type == 'binary' && beta == 0.5) || (type == 'distance'))
     script:
-    f1_score = history
+    println(f1_score)
     """
     python $pyvalidation    --weights ${weights} \
                             --meta ${meta} \
