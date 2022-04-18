@@ -11,7 +11,7 @@ AUTO = tf.data.AUTOTUNE
 P = 0.3
 
 
-def img_transformer(p=P, size=224, key="train", mean=None, std=None):
+def img_transformer(p=P, size=(224, 224), key="train", mean=None, std=None):
     if key == "train":
         transform = A.Compose(
             [
@@ -30,7 +30,7 @@ def img_transformer(p=P, size=224, key="train", mean=None, std=None):
                 A.ElasticTransform(
                     alpha=5, sigma=50, alpha_affine=20, interpolation=1, p=p
                 ),
-                A.RandomCrop(size, size, always_apply=True),
+                A.RandomCrop(size[0], size[1], always_apply=True),
                 A.Normalize(
                     mean=mean / 255.0,
                     std=std / 255.0,
@@ -42,7 +42,7 @@ def img_transformer(p=P, size=224, key="train", mean=None, std=None):
     else:
         transform = A.Compose(
             [
-                A.CenterCrop(size, size, always_apply=True),
+                A.CenterCrop(size[0], size[1], always_apply=True),
                 A.Normalize(
                     mean=mean / 255.0,
                     std=std / 255.0,
@@ -60,18 +60,19 @@ def save_dic(file_name, dict):
 
 
 def processing_data_functions(p=P, size=224, key="train", mean=None, std=None):
+    if isinstance(size, int):
+        size = (size, size)
     transform = img_transformer(p, size=size, key=key, mean=mean, std=std)
-
     def aug_fn(image, label, bs, image_size=size):
-        img_aug = np.zeros((bs, image_size, image_size, 3), dtype=np.float32)
-        lbl_aug = np.zeros((bs, image_size, image_size), dtype=np.float32)
+        img_aug = np.zeros((bs, image_size[0], image_size[1], 3), dtype=np.float32)
+        lbl_aug = np.zeros((bs, image_size[0], image_size[1]), dtype=np.float32)
         for i in range(bs):
             aug_data = transform(image=image[i], mask=label[i])
             img_aug[i] = aug_data["image"]
             lbl_aug[i] = aug_data["mask"]
         return img_aug, lbl_aug
 
-    def process_data(image, label, bs, image_size=size):
+    def process_data(image, label, bs):
         aug_img, label = tf.numpy_function(
             func=aug_fn, inp=[image, label, bs], Tout=[tf.float32, tf.float32]
         )

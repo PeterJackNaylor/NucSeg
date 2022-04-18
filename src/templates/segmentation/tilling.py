@@ -99,7 +99,7 @@ def tile(image, level, mask, size, mask_level=5):
 
 
 def main():
-    size = 224
+    size = int("${size}")
     # Load sample
     slide = open_image("${sample}")
     mask = io.imread("${mask}")[:,:,0]
