@@ -26,7 +26,7 @@ class consep(BaseData):
 
 def main():
     opt = options()
-    consep_dataset = consep(opt.path, opt.size, "consep")
+    consep_dataset = consep(opt.path, opt.size, "consep", opt.target)
     consep_dataset.create_dataset()
 
 

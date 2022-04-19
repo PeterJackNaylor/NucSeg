@@ -12,14 +12,14 @@ params.benchmark = 1
 if (params.benchmark == 1){
     EPOCHS = 100
     MODELS = ['Unet', 'FPN', 'Linknet']
-    BACKBONES = ['resnet50', 'inceptionv3', 'efficientnetb4']
-    ENCODER = ['imagenet', 'None']
-    LOSS = ['CE', 'mse']
-    LABELS = ["binary", "distance"]
-    LR = [1e-1, 1e-2, 1e-3, 1e-4]
+    BACKBONES = ['resnet50']
+    ENCODER = ['imagenet']
+    LOSS = ['CE']
+    LABELS = ["binary"]
+    LR = [1e-1, 1e-2, 1e-3, 1e-4, 1e-5]
     WD = [1e-1, 5e-3, 5e-5]
-    ALPHA = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
-    BETA= [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6]
+    ALPHA = [6, 12, 18, 24, 30]
+    BETA= [0, 0.2, 0.5, 0.7]
 } else {
     EPOCHS = 20
     MODELS = ['Unet']
@@ -44,6 +44,11 @@ DATASETS = Channel.from(["tnbc", file("src/python/datasets/tnbc.py"), file(param
 
 CWD=System.getProperty("user.dir")
 
+PY_NORMALIZE = file("src/python/datasets/normalize.py")
+params.target = "None"
+TARGET = params.target
+
+
 process preparing_data {
     tag "${NAME}"
     containerOptions '-B /data:/data'
@@ -55,7 +60,7 @@ process preparing_data {
 
     script:
     """
-    python $PY --path $PATH --size $SIZE
+    python $PY --path $PATH --size $SIZE --target $TARGET
     """
 }
 

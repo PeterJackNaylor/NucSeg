@@ -3,13 +3,16 @@ import numpy as np
 
 from skimage.io import imread
 import skimage.measure as meas
+import staintools
 
 
 def options():
     parser = argparse.ArgumentParser(description="setting up dataset")
     parser.add_argument("--path", type=str)
     parser.add_argument("--size", type=int)
+    parser.add_argument("--target", type=str)
     args = parser.parse_args()
+    args.parser = None if args.target == "None" else args.target
     return args
 
 
@@ -26,10 +29,13 @@ def split(image, label, size):
 
 
 class BaseData:
-    def __init__(self, path, size, name) -> None:
+    def __init__(self, path, size, name, target=None) -> None:
         self.path = path
         self.size = size
         self.name = name
+        self.normalize_b = target is not None
+        if self.normalize_b:
+            self.setup_normalizer(target)
 
     def gt_read(self, filename, raw_img):
         return imread(filename)
@@ -41,10 +47,22 @@ class BaseData:
         gt = meas.label(gt)
         return raw[:, :, :3], gt
 
+    def setup_normalizer(self, path):
+        target = staintools.read_image(path)
+        target_lum = staintools.LuminosityStandardizer.standardize(target)
+        self.target_he = staintools.StainNormalizer(method='vahadane')
+        self.target_he.fit(target_lum) 
+
+    def normalize(self, img):
+        img = staintools.LuminosityStandardizer.standardize(img)
+        return self.target_he.transform(img)
+
     def create_dataset(self):
         x, y, organs = [], [], []
         for raw_path, gt_path, organ in self.generate_filename():
             raw = imread(raw_path)
+            if self.normalize_b:
+                raw = self.normalize(raw)
             gt = self.gt_read(gt_path, raw)
             raw, gt = self.post_process(raw, gt)
             for c_raw, c_gt in split(raw, gt, self.size):

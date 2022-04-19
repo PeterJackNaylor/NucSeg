@@ -22,6 +22,7 @@ benchmark: src/nuclei_segmentation_model.nf
 				--consep_path $(DATA_NUC)/consep/CoNSeP \
 				--cpm_path $(DATA_NUC)/DataCPM \
 				--pancrops_path $(DATA_NUC)/pan_crops \
+				--target $(DATA_NUC)/MoNucleiSegmentation/Slide_testbreast/Slide_01.png \
 				--benchmark 1 \
 				-resume
 
@@ -32,6 +33,7 @@ Unet_vgg: src/nuclei_segmentation_model.nf
 				--consep_path $(DATA_NUC)/consep/CoNSeP \
 				--cpm_path $(DATA_NUC)/DataCPM \
 				--pancrops_path $(DATA_NUC)/pan_crops \
+				--target $(DATA_NUC)/MoNucleiSegmentation/Slide_testbreast/Slide_01.png \
 				--benchmark 0 \
 				-resume
 

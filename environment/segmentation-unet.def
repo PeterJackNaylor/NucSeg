@@ -6,7 +6,7 @@ From: tensorflow/tensorflow:latest-gpu
     requirements.txt .
     
 %post
-    apt-get update && apt-get install git -y
+    apt-get update && apt-get install git libblas-dev liblapack-dev gfortran libgl1 -y
     pip install ez_setup
     ## openslide
     apt-get install openslide-tools -y
@@ -18,3 +18,7 @@ From: tensorflow/tensorflow:latest-gpu
     cd dynamic_watershed && python setup.py install
 
     pip install -U --pre segmentation-models
+
+    pip install mkl
+    pip install spams
+    pip install staintools

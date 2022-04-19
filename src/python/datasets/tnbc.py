@@ -37,7 +37,7 @@ class tnbc(BaseData):
 
 def main():
     opt = options()
-    tnbc_dataset = tnbc(opt.path, opt.size, "tnbc")
+    tnbc_dataset = tnbc(opt.path, opt.size, "tnbc", opt.target)
     tnbc_dataset.create_dataset()
 
 

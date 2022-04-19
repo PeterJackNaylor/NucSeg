@@ -77,7 +77,7 @@ class cpm(BaseData):
 
 def main():
     opt = options()
-    cpm_dataset = cpm(opt.path, opt.size, "cpm")
+    cpm_dataset = cpm(opt.path, opt.size, "cpm", opt.target)
     cpm_dataset.create_dataset()
 
 

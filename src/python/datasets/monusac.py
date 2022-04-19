@@ -4,7 +4,6 @@ import numpy as np
 from glob import glob
 
 import skimage.measure as meas
-from skimage.util import pad
 import xml.etree.ElementTree as ET
 from skimage import draw
 
@@ -80,8 +79,8 @@ def square_padding(raw, gt, size):
             m = int(m)
             m = (m, m + 1)
         pad_width.append(m)
-    raw = pad(raw, pad_width + [(0, 0)], mode="reflect")
-    gt = pad(gt, pad_width, mode="reflect")
+    raw = np.pad(raw, pad_width + [(0, 0)], mode="reflect")
+    gt = np.pad(gt, pad_width, mode="reflect")
     return raw, gt
 
 
@@ -147,7 +146,7 @@ class monusac(BaseData):
 
 def main():
     opt = options()
-    monusac_dataset = monusac(opt.path, opt.size, "monusac")
+    monusac_dataset = monusac(opt.path, opt.size, "monusac", opt.target)
     monusac_dataset.create_dataset()
 
 

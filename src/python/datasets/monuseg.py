@@ -27,7 +27,7 @@ class monuseg(BaseData):
 
 def main():
     opt = options()
-    monuseg_dataset = monuseg(opt.path, opt.size, "monuseg")
+    monuseg_dataset = monuseg(opt.path, opt.size, "monuseg", opt.target)
     monuseg_dataset.create_dataset()
 
 

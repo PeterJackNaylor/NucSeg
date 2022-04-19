@@ -48,7 +48,7 @@ class pancrops(BaseData):
 
 def main():
     opt = options()
-    pancrops_dataset = pancrops(opt.path, opt.size, "pancrops")
+    pancrops_dataset = pancrops(opt.path, opt.size, "pancrops", opt.target)
     pancrops_dataset.create_dataset()
 
 
