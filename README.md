@@ -26,7 +26,7 @@
 
 ## Evaluation procedure
 
-- what to do
+Train, validation and test split
 
 # For local debuging: 
 
