@@ -4,6 +4,7 @@ import pandas as pd
 import skimage.measure as meas
 
 from class_data import options, BaseData
+from consep import generate_wsl
 
 mapping = {
     "blca": "bladder",
@@ -43,6 +44,8 @@ class pancrops(BaseData):
 
     def post_process(self, raw, gt):
         gt = meas.label(gt)
+        lines = generate_wsl(gt)
+        gt[lines > 0] = 0
         return raw[3:-3, 3:-3, :3], gt[3:-3, 3:-3]
 
 

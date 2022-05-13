@@ -8,6 +8,7 @@ import xml.etree.ElementTree as ET
 from skimage import draw
 
 from class_data import options, BaseData
+from consep import generate_wsl
 
 mapping_dict = {
     "TCGA-55-1594": "lung",
@@ -141,6 +142,8 @@ class monusac(BaseData):
         """
         raw, gt = square_padding(raw, gt, self.size)
         gt = meas.label(gt)
+        lines = generate_wsl(gt)
+        gt[lines > 0] = 0
         return raw[:, :, :3], gt
 
 

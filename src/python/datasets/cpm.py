@@ -6,6 +6,7 @@ from glob import glob
 import skimage.measure as meas
 from monusac import square_padding
 from class_data import options, BaseData
+from consep import generate_wsl
 
 mapping = {
     "LUNG": "lung",
@@ -72,8 +73,9 @@ class cpm(BaseData):
             raw = raw[b[0]:b[1], b[2]:b[3]]
             gt = gt[b[0]:b[1], b[2]:b[3]]
         gt = meas.label(gt)
+        lines = generate_wsl(gt)
+        gt[lines > 0] = 0
         return raw[:, :, :3], gt
-
 
 def main():
     opt = options()

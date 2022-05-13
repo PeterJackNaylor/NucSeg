@@ -13,24 +13,24 @@ if (params.benchmark == 1){
     EPOCHS = 100
     MODELS = ['Unet', 'FPN', 'Linknet']
     BACKBONES = ['resnet50']
-    ENCODER = ['imagenet']
-    LOSS = ['CE']
+    ENCODERS = ['imagenet']
+    LOSSS = ['CE']
     LABELS = ["binary"]
-    LR = [1e-1, 1e-2, 1e-3, 1e-4, 1e-5]
-    WD = [1e-1, 5e-3, 5e-5]
-    ALPHA = [6, 12, 18, 24, 30]
-    BETA= [0, 0.2, 0.5, 0.7]
+    LRS = [1e-1, 1e-2, 1e-3, 1e-4, 1e-5]
+    WDS = [1e-1, 5e-3, 5e-5]
+    ALPHAS = [6, 12, 18, 24, 30]
+    BETAS = [0, 0.2, 0.5, 0.7]
 } else {
     EPOCHS = 20
     MODELS = ['Unet']
     BACKBONES = ['vgg16']
-    ENCODER = ['imagenet']
-    LOSS = ['CE']
+    ENCODERS = ['imagenet']
+    LOSSS = ['CE']
     LABELS = ["binary"]
-    LR = [1e-2, 1e-3]
-    WD = [5e-3]
-    ALPHA = [1, 4]
-    BETA= [0.2, 0.5]
+    LRS = [1e-2, 1e-3]
+    WDS = [5e-3]
+    ALPHAS = [1, 4]
+    BETAS = [0.2, 0.5]
 }
 
 
@@ -54,29 +54,29 @@ process preparing_data {
     containerOptions '-B /data:/data'
 
     input:
-        set NAME, file(PY), file(PATH) from DATASETS
+        tuple val(NAME), path(PY), path(PATH)
     output:
-        file("Xy_${NAME}.npz") into XY
+        path("Xy_${NAME}.npz")
 
     script:
-    """
-    python $PY --path $PATH --size $SIZE --target $TARGET
-    """
+        """
+        python $PY --path $PATH --size $SIZE --target $TARGET
+        """
 }
 
 split_data_into_tvt = file('src/python/datasets/train_valid_test_split.py')
 
 process train_validation_test {
     input:
-        file _ from XY .collect()
-        each LABEL from LABELS
+        path XY
+        each LAB
     output:
-        set val("$LABEL"), "Xy_train.npz", "Xy_validation.npz" into TRAIN_VAL_SET
-        set val("$LABEL"), "Xy_test.npz" into TEST_SET
+        tuple val("$LAB"), path("Xy_train.npz"), path("Xy_validation.npz")
+        tuple val("$LAB"), path("Xy_test.npz")
     script:
-    """
-    python $split_data_into_tvt $LABEL
-    """
+        """
+        python $split_data_into_tvt $LAB
+        """
 }
 
 pytraining = file("src/python/nn/training.py")
@@ -89,39 +89,38 @@ process training {
     afterScript  "source ${CWD}/environment/GPU_LOCKS/free_gpu.sh ${CWD}"
 
     input:
-        set type, file(train), file(validation) from TRAIN_VAL_SET
-        each backbone from BACKBONES
-        each model from MODELS
-        each lr from LR
-        each wd from WD
-        each encoder from ENCODER 
-        each loss from LOSS
+        tuple val(TYPE), path(TRAIN), path(VALIDATION)
+        each BACKBONE
+        each MODEL
+        each LR
+        each WD
+        each ENCODER 
+        each LOSS
     output:
-        set val("PARAM: type=${type}; backbone=${backbone}; model=${model}; lr=${lr}; wd=${wd}; encoder=${encoder}; loss=${loss}"), \
-            val(type), file('model_weights.h5'), file('history.csv'), file('meta.pkl'), file(validation)  into TRAINED_MODELS
+        tuple val("PARAM: type=${TYPE}; backbone=${BACKBONE}; model=${MODEL}; lr=${LR}; wd=${WD}; encoder=${ENCODER}; loss=${LOSS}"), \
+            val(TYPE), path('model_weights.h5'), path('history.csv'), path('meta.pkl'), path(validation)
             
     when:
-        (type == 'distance' && loss == 'mse') || (type == 'binary' && loss != 'mse')
+        (TYPE == 'distance' && LOSS == 'mse') || (TYPE == 'binary' && LOSS != 'mse')
     script:
-    """
-    export SM_FRAMEWORK=tf.keras
-    python $pytraining  --path_train $train \
-                        --path_validation $validation \
-                        --backbone $backbone \
-                        --model $model \
-                        --encoder $encoder \
-                        --batch_size 32 \
-                        --epochs $EPOCHS \
-                        --learning_rate $lr \
-                        --weight_decay $wd \
-                        --loss $loss
-    """
+        """
+        export SM_FRAMEWORK=tf.keras
+        python $pytraining  --path_train $TRAIN \
+                            --path_validation $VALIDATION \
+                            --backbone $BACKBONE \
+                            --model $MODEL \
+                            --encoder $ENCODER \
+                            --batch_size 32 \
+                            --epochs $EPOCHS \
+                            --learning_rate $LR \
+                            --weight_decay $WD \
+                            --loss $LOSS
+        """
 }
 
 pyvalidation = file("src/python/nn/validation.py")
 
-TRAINED_MODELS .map{ it0, it1, it2, history, it4, it5 -> [it0, it1, it2, history, it4, it5, Channel.fromPath(history).splitCsv(header: ["c1","c2","c3","c4","c5","c6","c7","c8","val_score","c9","c10","c11"], skip:1).map { row -> Float.valueOf("${row.val_score}") } .max () .val]}
-               .set{TRAINED_MODELS}
+
 
 process validation_with_ws {
 
@@ -131,31 +130,28 @@ process validation_with_ws {
     afterScript  "source ${CWD}/environment/GPU_LOCKS/free_gpu.sh ${CWD}"
 
     input:
-        set file(param), type, file(weights), file(history), \
-            file(meta), file(validation), val(f1_score) from TRAINED_MODELS
-        each alpha from ALPHA 
-        each beta from BETA
+        tuple path(PARAM), val(TYPE), path(WEIGHTS), path(HISTORY), \
+            path(META), path(VALIDATION), val(F1_SCORE)
+        each ALPHA 
+        each BETA
     output:
-        file('score.csv') into VALIDATION_SCORE
+        path('score.csv')
     when:
-        ( f1_score > 0.6 ) && ((type == 'binary' && beta == 0.5) || (type == 'distance'))
+        ( F1_SCORE > 0.6 ) && ((TYPE == 'binary' && BETA == 0.5) || (TYPE == 'distance'))
     script:
-    """
-    python $pyvalidation    --weights ${weights} \
-                            --meta ${meta} \
-                            --path ${validation} \
-                            --alpha ${alpha} \
-                            --beta ${beta} \
-                            --history ${history} \
-                            --param ${param} \
-                            --aji
+        """
+        python $pyvalidation    --weights ${WEIGHTS} \
+                                --meta ${META} \
+                                --path ${VALIDATION} \
+                                --alpha ${ALPHA} \
+                                --beta ${BETA} \
+                                --history ${HISTORY} \
+                                --param ${PARAM} \
+                                --aji
 
-    """
+        """
     
 }
-
-VALIDATION_SCORE.collectFile(skip: 1, keepHeader: true)
-                .set { ALL_VALIDATION }
 
 pytest = file('src/python/nn/testing.py')
 process test {
@@ -167,13 +163,28 @@ process test {
     afterScript  "source ${CWD}/environment/GPU_LOCKS/free_gpu.sh ${CWD}"
 
     input:
-        file f from  ALL_VALIDATION
-        set type, file(data) from TEST_SET
+        path(f)
+        tuple val(TYPE), path(DATA)
     output:
-        set file('score.csv'), file('model_weights.h5'), file('meta.pkl'), file('final_score.csv'), file('samples')
+        tuple path('score.csv'), path('model_weights.h5'), path('meta.pkl'), path('final_score.csv'), path('samples')
     script:
-    """
-    python $pytest --path $data --scores $f --aji
-    """
+        """
+        python $pytest --path $DATA --scores $f --aji
+        """
     
+}
+
+
+
+
+workflow {
+    main:
+        preparing_data(DATASETS)
+        train_validation_test(preparing_data.out.collect(), LABELS)
+        training(train_validation_test.out[0], BACKBONES, MODELS, LRS, WDS, ENCODERS, LOSSS)
+
+        training.out .map{ it0, it1, it2, history, it4, it5 -> [it0, it1, it2, history, it4, it5, Channel.fromPath(history).splitCsv(header: ["c1","c2","c3","c4","c5","c6","c7","c8","val_score","c9","c10","c11"], skip:1).map { row -> Float.valueOf("${row.val_score}") } .max () .val]}
+                .set{trained_models}
+        validation_with_ws(trained_models, ALPHAS, BETAS)
+        test(validation_with_ws.out.collectFile(skip: 1, keepHeader: true), train_validation_test.out[1])
 }

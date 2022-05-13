@@ -15,7 +15,7 @@ From: tensorflow/tensorflow:latest-gpu
 
     ## install dynamic watershed
     git clone https://github.com/PeterJackNaylor/dynamic_watershed.git
-    cd dynamic_watershed && python setup.py install
+    cd dynamic_watershed && pip install .
 
     pip install -U --pre segmentation-models
 
