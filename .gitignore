@@ -185,5 +185,5 @@ work/
 .nextflow/
 .nextflow.*
 *.sif
-output/
+outputs/
 tmp/
